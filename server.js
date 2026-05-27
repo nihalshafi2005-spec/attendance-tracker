@@ -11,6 +11,9 @@ app.use(express.json({ limit: '50mb' }));
 // Serve all vanilla HTML, CSS, and JS files from the public folder [cite: 8, 9]
 app.use(express.static('public'));
 
+app.get('/', (req, res) => {
+    res.redirect('/login.html');
+});
 const DATA_FILE = path.join(__dirname, 'database.json');
 
 // Helper function to read the local JSON database safely
@@ -155,3 +158,30 @@ app.get('/api/admin/dashboard', (req, res) => {
 
 const PORT = 3000;
 app.listen(PORT, () => console.log(`🚀 System Online at: http://localhost:${PORT}`));
+// Add this route inside your server.js to catch the Google Meet console data
+app.post('/api/attendance', (req, res) => {
+    const { students } = req.body;
+    let data = readData();
+    const timestamp = new Date().toString();
+
+    students.forEach(name => {
+        // Create a profile automatically if they don't exist yet
+        if (!data[name]) {
+            data[name] = {
+                profile: { name: name, email: "Unknown", contact: "N/A", photo: "" },
+                sessions: [],
+                progress: []
+            };
+        }
+        
+        // Log their attendance session stamp automatically
+        data[name].sessions.push({
+            loginTime: timestamp,
+            logoutTime: "Class Session Live",
+            duration: "Tracked via Meet"
+        });
+    });
+
+    writeData(data);
+    res.send("Attendance logged from Google Meet panel!");
+});
